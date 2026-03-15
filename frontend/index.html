@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>健康档案小程序 - 产品优化版</title>
+    <meta name="version" content="v13-fix-click">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            max-width: 414px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+        .phone-frame {
+            background: #fff;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 100px;
+        }
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        /* 导航栏 */
+        .nav-bar {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: #fff;
+            padding: 45px 20px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1001;
+            position: relative;
+        }
+        .nav-title { font-size: 18px; font-weight: 600; }
+        .nav-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+            transition: transform 0.2s;
+        }
+        .nav-avatar:active {
+            transform: scale(0.9);
+        }
+        
+        /* 今日待办优化版 */
+        .todo-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 15px;
+            border-radius: 16px;
+            padding: 20px;
+            color: #fff;
+        }
+        .todo-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px;
+        }
+        .todo-title { font-size: 16px; font-weight: 600; }
+        .todo-progress { font-size: 14px; opacity: 0.9; }
+        .todo-item {
+            display: flex; align-items: center; background: rgba(255,255,255,0.15);
+            padding: 12px; border-radius: 10px; margin-bottom: 8px;
+        }
+        .todo-med { font-size: 16px; flex: 1; }
+        .todo-time { font-size: 13px; opacity: 0.9; margin-right: 10px; }
+        .todo-status {
+            font-size: 12px; padding: 4px 10px; border-radius: 12px;
+            background: rgba(255,255,255,0.2);
+        }
+        .todo-status.done { background: #4CAF50; }
+        .todo-status.skip { background: #FF9800; }
+        .todo-status.expired { background: #f44336; }
+        .todo-adherence {
+            margin-top: 15px; padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            font-size: 13px; opacity: 0.9;
+        }
+        
+        /* 搜索 */
+        .search-bar {
+            display: flex; align-items: center; background: #fff;
+            border-radius: 25px; padding: 12px 20px;
+            margin: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .search-bar input { flex: 1; border: none; outline: none; font-size: 14px; }
+        
+        /* 添加区域 */
+        .add-section {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 15px; margin-bottom: 15px;
+        }
+        .section-title-text { font-size: 18px; font-weight: 600; }
+        .btn-add {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border: none; color: #fff; font-size: 24px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+        
+        /* 悬浮按钮 */
+        .float-btn {
+            position: fixed; right: 20px; bottom: 100px;
+            width: 56px; height: 56px; border-radius: 50%;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border: none; color: #fff; font-size: 28px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.5);
+            z-index: 9999;
+            cursor: pointer;
+            transition: transform 0.3s;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .float-btn:active {
+            transform: scale(0.9);
+        }
+        .float-btn.active { transform: rotate(45deg); }
+        
+        .float-menu {
+            position: fixed; right: 20px; bottom: 170px;
+            display: none; flex-direction: column; gap: 10px;
+            z-index: 9998;
+        }
+        .float-menu.active { display: flex; }
+        .float-item {
+            display: flex; align-items: center; justify-content: flex-end;
+            gap: 10px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .float-item:active {
+            opacity: 0.7;
+        }
+        .float-item-text {
+            background: rgba(0,0,0,0.7); color: #fff;
+            padding: 6px 12px; border-radius: 12px;
+            font-size: 12px;
+            pointer-events: none;
+        }
+        .float-item-icon {
+            width: 44px; height: 44px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            pointer-events: none;
+        }
+        
+        /* 列表 */
+        .visit-list { padding: 0 15px; }
+        .visit-item {
+            background: #fff; border-radius: 16px;
+            padding: 16px; margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .visit-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        .visit-hospital { font-size: 17px; font-weight: 600; flex: 1; }
+        .visit-date { font-size: 13px; color: #999; }
+        .visit-info { font-size: 14px; color: #666; margin-bottom: 10px; }
+        .visit-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+        .tag {
+            font-size: 11px; padding: 4px 10px; border-radius: 12px;
+        }
+        .tag.type { background: #E8F5E9; color: #4CAF50; }
+        .tag.lab { background: #E3F2FD; color: #2196F3; }
+        .tag.med { background: #FFF3E0; color: #FF9800; }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center; padding: 60px 30px;
+        }
+        .empty-icon { font-size: 80px; margin-bottom: 20px; }
+        .empty-title { font-size: 18px; color: #333; margin-bottom: 10px; }
+        .empty-desc { font-size: 14px; color: #999; margin-bottom: 20px; }
+        .empty-btn {
+            background: #4CAF50; color: #fff;
+            border: none; border-radius: 20px;
+            padding: 12px 24px; font-size: 15px;
+        }
+        
+        /* 底部导航 */
+        .tab-bar {
+            position: fixed; bottom: 0; left: 50%;
+            transform: translateX(-50%); width: 100%;
+            max-width: 414px; display: flex;
+            background: #fff; border-top: 1px solid #eee;
+            padding: 8px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 1000;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .tab-item {
+            flex: 1; text-align: center; color: #999;
+            font-size: 11px; padding: 8px 5px;
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .tab-item:active {
+            opacity: 0.6;
+            transform: scale(0.95);
+            transition: all 0.1s;
+        }
+        .tab-item.active { color: #4CAF50; }
+        .tab-icon { font-size: 24px; display: block; margin-bottom: 3px; }
+        
+        /* 弹窗 */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            right: 0; bottom: 0; background: rgba(0,0,0,0.5);
+            z-index: 10000;
+            align-items: center; justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #fff; border-radius: 20px;
+            width: 85%; max-width: 320px; overflow: hidden;
+        }
+        .modal-header {
+            padding: 20px; text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        .modal-title { font-size: 17px; font-weight: 600; }
+        .modal-body { padding: 20px; }
+        .modal-option {
+            display: flex; align-items: center; padding: 15px;
+            border-radius: 12px; margin-bottom: 10px;
+            cursor: pointer; background: #f9f9f9;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .modal-option:active {
+            background: #e9e9e9;
+        }
+        .modal-option-icon { font-size: 28px; margin-right: 15px; }
+        .modal-option-text { font-size: 15px; }
+        .modal-option-desc { font-size: 12px; color: #999; margin-top: 4px; }
+        .modal-footer {
+            padding: 15px; text-align: center;
+            border-top: 1px solid #eee; color: #666;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .modal-footer:active {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <!-- 首页 -->
+        <div id="page-home" class="page active">
+            <div class="nav-bar">
+                <span class="nav-title">健康档案</span>
+                <span class="nav-avatar" onclick="switchTab('profile')">👤</span>
+            </div>
+            
+            <!-- 今日待办优化版 -->
+            <div class="todo-card">
+                <div class="todo-header">
+                    <span class="todo-title">⏰ 今日待办</span>
+                    <span class="todo-progress">2/3 已完成</span>
+                </div>
+                
+                <!-- 已服 -->
+                <div class="todo-item">
+                    <span class="todo-med">💊 阿司匹林</span>
+                    <span class="todo-time">08:00</span>
+                    <span class="todo-status done">✓ 已服</span>
+                </div>
+                
+                <!-- 跳过 -->
+                <div class="todo-item">
+                    <span class="todo-med">💊 维生素C</span>
+                    <span class="todo-time">12:00</span>
+                    <span class="todo-status skip">⊘ 跳过</span>
+                </div>
+                
+                <!-- 待服 -->
+                <div class="todo-item">
+                    <span class="todo-med">💊 奥美拉唑</span>
+                    <span class="todo-time">18:00</span>
+                    <span class="todo-status">○ 待服</span>
+                </div>
+                
+                <!-- 过期 -->
+                <div class="todo-item" style="opacity: 0.7;">
+                    <span class="todo-med">💊 布洛芬（昨日）</span>
+                    <span class="todo-time">昨天</span>
+                    <span class="todo-status expired">!</span>
+                </div>
+                
+                <div class="todo-adherence">
+                    📊 本周依从性: 85% · 按时12次 · 漏服2次 · 补服1次
+                </div>
+            </div>
+            
+            <div class="search-bar">
+                <input type="text" placeholder="搜索医院、科室、医生...">
+                <span>🔍</span>
+            </div>
+            
+            <div class="add-section">
+                <span class="section-title-text">📋 就诊记录</span>
+                <!-- 移除页面上的 + 按钮，使用悬浮按钮 -->
+            </div>
+            
+            <div class="visit-list">
+                <div class="visit-item">
+                    <div class="visit-header">
+                        <span class="visit-hospital">北京协和医院</span>
+                        <span class="visit-date">2026.02.20</span>
+                    </div>
+                    <div class="visit-info">心内科 | 张医生 | 高血压随访</div>
+                    <div class="visit-tags">
+                        <span class="tag type">复诊</span>
+                        <span class="tag lab">有化验</span>
+                        <span class="tag med">有用药</span>
+                    </div>
+                </div>
+                
+                <div class="visit-item">
+                    <div class="visit-header">
+                        <span class="visit-hospital">上海瑞金医院</span>
+                        <span class="visit-date">2026.02.15</span>
+                    </div>
+                    <div class="visit-info">消化内科 | 李医生 | 胃炎初诊</div>
+                    <div class="visit-tags">
+                        <span class="tag type">初诊</span>
+                        <span class="tag med">有用药</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 用药页面 -->
+        
+        <!-- 就诊记录页面 -->
+        <div id="page-record" class="page">
+            <div class="nav-bar">
+                <div class="nav-title">添加就诊记录</div>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <div class="form-group">
+                        <label class="form-label">就诊日期</label>
+                        <input type="date" class="input-field" placeholder="选择日期">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">医院名称</label>
+                        <input type="text" class="input-field" placeholder="例如：北京协和医院">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">科室</label>
+                        <input type="text" class="input-field" placeholder="例如：心内科">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">主诉</label>
+                        <textarea class="textarea-field" rows="3" placeholder="描述您的症状"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">诊断结果</label>
+                        <textarea class="textarea-field" rows="3" placeholder="医生的诊断"></textarea>
+                    </div>
+                    <button class="btn-primary" onclick="submitVisit()">保存</button>
+                </div>
+            </div>
+        </div>
+
+<div id="page-medication" class="page">
+            <div class="nav-bar">
+                <span class="nav-title">用药清单</span>
+                <span class="nav-avatar" onclick="switchTab('profile')">👤</span>
+            </div>
+            <div class="empty-state">
+                <div class="empty-icon">💊</div>
+                <div class="empty-title">用药清单</div>
+                <div class="empty-desc">在这里管理您的所有用药记录</div>
+            </div>
+        </div>
+        
+        <!-- 化验页面 -->
+        <div id="page-lab" class="page">
+            <div class="nav-bar">
+                <span class="nav-title">化验指标</span>
+                <span class="nav-avatar" onclick="switchTab('profile')">👤</span>
+            </div>
+            <div class="empty-state">
+                <div class="empty-icon">🧪</div>
+                <div class="empty-title">化验指标</div>
+                <div class="empty-desc">记录和追踪您的化验检查结果</div>
+            </div>
+        </div>
+        
+        <!-- 我的页面 -->
+        <div id="page-profile" class="page">
+            <div class="nav-bar">
+                <span class="nav-title">个人中心</span>
+                <span class="nav-avatar">👤</span>
+            </div>
+            <div class="empty-state">
+                <div class="empty-icon">👤</div>
+                <div class="empty-title">个人中心</div>
+                <div class="empty-desc">管理个人资料和健康评分</div>
+            </div>
+        </div>
+        
+        <!-- 悬浮按钮 -->
+        <button class="float-btn" id="floatBtn" onclick="toggleFloatMenu()">+</button>
+        <div class="float-menu" id="floatMenu">
+            <div class="float-item" onclick="selectAddMethod('manual')">
+                <span class="float-item-text">手动输入</span>
+                <div class="float-item-icon">📝</div>
+            </div>
+            <div class="float-item" onclick="selectAddMethod('manual')">
+                <span class="float-item-text">AI识别</span>
+                <div class="float-item-icon">📷</div>
+            </div>
+            <div class="float-item" onclick="selectAddMethod('manual')">
+                <span class="float-item-text">语音</span>
+                <div class="float-item-icon">🎤</div>
+            </div>
+        </div>
+        
+        <!-- 底部导航 -->
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="switchTab('home')" data-tab="home">
+                <span class="tab-icon">📋</span>
+                <span>就诊</span>
+            </div>
+            <div class="tab-item" onclick="switchTab('medication')" data-tab="medication">
+                <span class="tab-icon">💊</span>
+                <span>用药</span>
+            </div>
+            <div class="tab-item" onclick="switchTab('lab')" data-tab="lab">
+                <span class="tab-icon">🧪</span>
+                <span>化验</span>
+            </div>
+            <div class="tab-item" onclick="switchTab('profile')" data-tab="profile">
+                <span class="tab-icon">👤</span>
+                <span>我的</span>
+            </div>
+        </div>
+        
+        <!-- 添加弹窗 -->
+        <div class="modal-overlay" id="addModal" onclick="hideAddModal(event)">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <div class="modal-title">添加就诊记录</div>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-option" onclick="switchTab('record'); hideAddModal();">
+                        <span class="modal-option-icon">📝</span>
+                        <div>
+                            <div class="modal-option-text">手动输入</div>
+                            <div class="modal-option-desc">适合详细记录完整信息</div>
+                        </div>
+                    </div>
+                    <div class="modal-option" onclick="triggerUpload()">
+                        <span class="modal-option-icon">📷</span>
+                        <div>
+                            <div class="modal-option-text">AI智能识别</div>
+                            <div class="modal-option-desc">拍照自动识别，快速录入</div>
+                        </div>
+                    </div>
+                    <div class="modal-option" onclick="alert('语音输入开发中...');">
+                        <span class="modal-option-icon">🎤</span>
+                        <div>
+                            <div class="modal-option-text">语音输入</div>
+                            <div class="modal-option-desc">说话即可记录，解放双手</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" onclick="hideAddModal()">取消</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 切换标签页
+        function switchTab(tabName) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById('page-' + tabName).classList.add('active');
+            document.querySelectorAll('.tab-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector('[data-tab="' + tabName + '"]').classList.add('active');
+        }
+        
+        function showAddModal() {
+            document.getElementById('addModal').classList.add('active');
+        }
+        
+        function hideAddModal(event) {
+            if (!event || event.target.id === 'addModal') {
+                document.getElementById('addModal').classList.remove('active');
+            }
+        }
+        
+        // 选择添加方式
+        function selectAddMethod(method) {
+            const floatBtn = document.getElementById('floatBtn');
+            const floatMenu = document.getElementById('floatMenu');
+            if (floatBtn) floatBtn.classList.remove('active');
+            if (floatMenu) floatMenu.classList.remove('active');
+            
+            if (method === 'manual') {
+                switchTab('record');
+            } else if (method === 'ai') {
+                triggerUpload();
+            } else if (method === 'voice') {
+                alert('语音输入功能开发中...');
+            }
+        }
+        
+        function toggleFloatMenu() {
+            console.log('Float button clicked!');
+            const btn = document.getElementById('floatBtn');
+            const menu = document.getElementById('floatMenu');
+            if (btn && menu) {
+                btn.classList.toggle('active');
+                menu.classList.toggle('active');
+                console.log('Classes toggled:', btn.className, menu.className);
+            } else {
+                console.error('Cannot find floatBtn or floatMenu');
+            }
+        }
+
+
+        
+        // 上传相关
+        const API_BASE = "http://141.148.169.133:3001";
+        let uploadedImageUrl = "";
+
+        function triggerUpload() {
+            hideAddModal();
+            document.getElementById('fileInput').click();
+        }
+
+        async function uploadImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // 找到页面上的按钮并显示加载中
+            let submitBtn = document.querySelector('#page-record .btn-primary');
+            let originalText = submitBtn ? submitBtn.innerText : "保存";
+            if(submitBtn) { submitBtn.innerText = "AI 识别中..."; submitBtn.disabled = true; }
+
+            // 切换到手动记录页面，方便看到结果
+            switchTab('record');
+
+            try {
+                // 使用新的一体化接口：上传并自动调用千问大模型
+                const res = await fetch(API_BASE + '/api/upload-and-analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await res.json();
+                
+                if (result.success) {
+                    uploadedImageUrl = result.upload.url;
+                    
+                    // 如果 AI 解析成功，自动填充表单
+                    if (result.analysis && !result.analysis.error) {
+                        const aiData = result.analysis;
+                        const inputs = document.querySelectorAll('#page-record .input-field');
+                        const textareas = document.querySelectorAll('#page-record .textarea-field');
+                        
+                        // 尝试填充日期 (如果有)
+                        if (aiData.date && inputs[0]) inputs[0].value = aiData.date;
+                        // 填充医院
+                        if (aiData.hospital && inputs[1]) inputs[1].value = aiData.hospital;
+                        // 填充科室
+                        if (aiData.department && inputs[2]) inputs[2].value = aiData.department;
+                        // 填充主诉
+                        if (aiData.chiefComplaint && textareas[0]) textareas[0].value = aiData.chiefComplaint;
+                        
+                        // 填充诊断或化验结果
+                        if (textareas[1]) {
+                            let detailText = "";
+                            if (aiData.diagnosis) detailText += "【AI诊断提取】" + aiData.diagnosis + "
+";
+                            
+                            if (aiData.testItems && aiData.testItems.length > 0) {
+                                detailText += "
+【化验异常项】
+";
+                                aiData.testItems.forEach(item => {
+                                    if(item.abnormal) detailText += `⚠️ ${item.itemName}: ${item.result} ${item.unit || ''} (参考: ${item.referenceRange || '无'})
+`;
+                                });
+                            }
+                            textareas[1].value = detailText;
+                        }
+                        
+                        alert("图片上传成功！通义千问 AI 已为您自动提取关键信息。");
+                    } else {
+                        alert("图片上传成功，但 AI 解析失败，请手动填写。");
+                    }
+                } else {
+                    alert("上传失败：" + JSON.stringify(result));
+                }
+            } catch (e) {
+                alert("网络或AI接口错误：" + e.message);
+            } finally {
+                if(submitBtn) { submitBtn.innerText = "保存"; submitBtn.disabled = false; }
+                input.value = ""; // 清空 input 以便下次能触发 onchange
+            }
+        }
+
+        async function submitVisit() {
+
+            const inputs = document.querySelectorAll('#page-record .input-field');
+            const date = inputs[0].value;
+            const hospital = inputs[1].value;
+            const department = inputs[2].value;
+            const textareas = document.querySelectorAll('#page-record .textarea-field');
+            const complaint = textareas[0].value;
+            const diagnosis = textareas[1].value;
+            
+            if (!date || !hospital) {
+                alert("请至少填写日期和医院！");
+                return;
+            }
+
+            const btn = document.querySelector('.btn-primary');
+            btn.innerText = "保存中...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(API_BASE + '/api/visits', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        date, hospital, department, complaint, diagnosis,
+                        attachmentUrl: uploadedImageUrl
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("保存成功！已写入 Notion。");
+                    inputs.forEach(i => { if(i.type !== 'date') i.value = ''; });
+                    textareas.forEach(t => t.value = '');
+                    uploadedImageUrl = "";
+                    switchTab('home');
+                } else {
+                    alert("保存失败：" + JSON.stringify(data));
+                }
+            } catch (e) {
+                alert("网络错误：" + e.message);
+            } finally {
+                btn.innerText = "保存";
+                btn.disabled = false;
+            }
+        }
+    </script>
+    
+    <!-- 隐藏的文件上传组件 -->
+    <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="uploadImage(this)">
+
+</body>
+</html>
