@@ -15,7 +15,12 @@ const UPLOAD_BASE_DIR = '/home/ubuntu/healthapp/uploads';
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 // 阿里云 DashScope API Key (Qwen-VL 视觉模型)
-const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY || 'sk-sp-834827fcd7ff4dac8fb472dcea3b3e30';
+const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY;
+
+if (!DASHSCOPE_API_KEY || !DASHSCOPE_API_KEY.trim()) {
+  console.error('Error: DASHSCOPE_API_KEY environment variable is required. Set it before starting the backend.');
+  process.exit(1);
+}
 
 // 允许的文件类型
 const ALLOWED_TYPES = {

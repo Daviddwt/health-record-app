@@ -773,7 +773,7 @@ npm install
 NOTION_API_KEY=your_notion_api_key
 
 # 阿里云 DashScope API Key
-DASHSCOPE_API_KEY=sk-xxx
+DASHSCOPE_API_KEY=your_dashscope_api_key
 
 # 服务器配置
 PORT=3001
@@ -782,6 +782,8 @@ UPLOAD_PORT=3001
 # 公网访问地址
 PUBLIC_URL=http://your-server-ip:3001
 ```
+
+后端不会自动加载 `.env` 文件；启动前须将 `DASHSCOPE_API_KEY` 和 `NOTION_API_KEY` 导出到进程环境（例如在终端使用 `export DASHSCOPE_API_KEY=your_dashscope_api_key`），或通过进程管理器注入。`DASHSCOPE_API_KEY` 为必填项，缺少或留空时后端会报错并以非零状态退出。请勿提交真实密钥。
 
 #### 10.2.5 启动服务
 

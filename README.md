@@ -31,7 +31,7 @@ healthapp/
 ### 环境要求
 - Node.js 16+
 - Notion API Key
-- Google Gemini API Key (AI 图片识别)
+- 阿里云 DashScope API Key (Qwen-VL 图片识别，必填)
 
 ### 安装步骤
 
@@ -55,14 +55,13 @@ npm install
 
 4. **配置环境变量**
 
-在 `backend/` 目录创建 `.env` 文件：
-```env
-NOTION_API_KEY=your_notion_api_key
-GEMINI_API_KEY=your_google_gemini_api_key
-NOTION_DATABASE_VISITS=your_visits_database_id
-NOTION_DATABASE_MEDICATIONS=your_medications_database_id
-NOTION_DATABASE_LAB_RESULTS=your_lab_results_database_id
+在启动后端的终端中设置环境变量（也可通过进程管理器注入）：
+```bash
+export NOTION_API_KEY=your_notion_api_key
+export DASHSCOPE_API_KEY=your_dashscope_api_key
 ```
+
+后端仅从环境变量读取密钥，不会自动加载 `.env` 文件。缺少或留空 `DASHSCOPE_API_KEY` 时，后端会输出明确错误并以非零状态退出。请勿将真实密钥提交到仓库。
 
 5. **启动服务**
 
@@ -117,7 +116,7 @@ node server.js
 
 **后端**
 - Node.js + Express.js
-- Google Gemini AI (图片识别)
+- 阿里云 Qwen-VL (图片识别)
 - Notion API (数据存储)
 - Multer (文件上传)
 
